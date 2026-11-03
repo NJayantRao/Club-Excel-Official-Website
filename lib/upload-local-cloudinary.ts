@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { randomUUID } from "crypto";
 import { cloudinary } from "@/lib/cloudinary";
 import type { CloudinaryUploadResult } from "@/lib/upload-image-cloudinary";
 
@@ -11,6 +12,15 @@ export async function uploadLocalImageToCloudinary(
 
   const buffer = await fs.readFile(absolutePath);
 
+  const originalFileName =
+    path
+      .basename(imagePath, path.extname(imagePath))
+      .replace(/[^a-zA-Z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "image";
+
+  const publicId = `${originalFileName}-${randomUUID().slice(0, 8)}`;
+
   const result = await new Promise<{
     secure_url: string;
     public_id: string;
@@ -19,6 +29,8 @@ export async function uploadLocalImageToCloudinary(
       .upload_stream(
         {
           folder,
+          public_id: publicId,
+          resource_type: "image",
         },
         (error, result) => {
           if (error) return reject(error);
@@ -33,5 +45,8 @@ export async function uploadLocalImageToCloudinary(
       .end(buffer);
   });
 
-  return { url: result.secure_url, publicId: result.public_id };
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+  };
 }
