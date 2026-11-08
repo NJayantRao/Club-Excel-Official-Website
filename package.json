@@ -10,7 +10,9 @@
     "prepare": "husky",
     "postinstall": "prisma generate",
     "format": "prettier --write .",
-    "signup-admin": "tsx scripts/admin-signup.ts"
+    "signup-admin": "tsx scripts/admin-signup.ts",
+    "seed-alumni": "tsx scripts/seed-alumni.ts",
+    "seed-members": "tsx scripts/seed-members.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,scss,md}": [

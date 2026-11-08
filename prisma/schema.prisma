@@ -11,12 +11,12 @@ model Member {
   name         String
   email        String        @unique
   phone        String?
-  role         Role          @default(MEMBER)
-  designation  String?
   year         String?
   skills       String[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  designation  String?
+  role         Role          @default(MEMBER)
   links        MemberLink[]
   achievements Achievement[] @relation("AchievementMembers")
 }
@@ -34,7 +34,6 @@ model Event {
   id                String           @id @default(uuid())
   title             String
   description       String?
-  status            EventStatusType  @default(UPCOMING)
   type              EventType
   startAt           DateTime
   endAt             DateTime?
@@ -42,10 +41,11 @@ model Event {
   registrationStart DateTime?
   registrationEnd   DateTime?
   capacity          Int?
-  whatsappLink      String?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   createdBy         String
+  status            EventStatusType  @default(UPCOMING)
+  whatsappLink      String?
   creator           Admin            @relation(fields: [createdBy], references: [id])
   formFields        EventFormField[]
   responses         EventResponse[]
@@ -98,9 +98,9 @@ model GalleryAlbum {
 model Media {
   id        String       @id @default(uuid())
   url       String
-  publicId  String?
   caption   String?
   createdAt DateTime     @default(now())
+  publicId  String?
   usages    MediaUsage[]
 }
 
@@ -114,15 +114,16 @@ model MediaUsage {
 }
 
 model Admin {
-  id                     String             @id @default(uuid())
-  name                   String
-  email                  String             @unique
-  password               String
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
-  createdEvents          Event[]
+  id                       String             @id @default(uuid())
+  name                     String
+  email                    String             @unique
+  password                 String
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  createdEvents            Event[]
   createdRecruitmentDrives RecruitmentDrive[]
 }
+
 model RecruitmentDrive {
   id                String                 @id @default(uuid())
   title             String
@@ -131,10 +132,10 @@ model RecruitmentDrive {
   status            RecruitmentDriveStatus @default(UPCOMING)
   registrationStart DateTime?
   registrationEnd   DateTime?
-  whatsappLink      String?
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
   createdBy         String
+  whatsappLink      String?
   creator           Admin                  @relation(fields: [createdBy], references: [id])
   formFields        RecruitmentFormField[]
   responses         RecruitmentResponse[]
@@ -152,24 +153,25 @@ model RecruitmentFormField {
   createdAt     DateTime         @default(now())
   recruitment   RecruitmentDrive @relation(fields: [recruitmentId], references: [id], onDelete: Cascade)
 }
+
 model RecruitmentResponse {
   id             String           @id @default(uuid())
   recruitmentId  String
   name           String
-  rollNumber     String
-  registrationNo String
-  gender         Gender
-  nistEmail      String
-  personalEmail  String
-  branch         String
-  hackerrankId   String
-  phoneNumber    String
-  locality       Locality
-  techStack      String
   isSelected     Boolean          @default(false)
   answers        Json             @default("{}")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  branch         String
+  gender         Gender
+  hackerrankId   String
+  locality       Locality
+  nistEmail      String
+  personalEmail  String
+  phoneNumber    String
+  registrationNo String
+  rollNumber     String
+  techStack      String
   recruitment    RecruitmentDrive @relation(fields: [recruitmentId], references: [id], onDelete: Cascade)
 
   @@unique([recruitmentId, personalEmail])

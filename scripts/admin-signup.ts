@@ -15,9 +15,9 @@ const prisma = new PrismaClient({
 
 const signUpAdmin = async () => {
   try {
-    const name = "<enter-admin-name>";
-    const email = "<enter-admin-email>";
-    const password = "<enter-admin-password>";
+    const name = "Club Excel Admin";
+    const email = "clubexcelofficial@gmail.com";
+    const password = "Club_excel@07";
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
