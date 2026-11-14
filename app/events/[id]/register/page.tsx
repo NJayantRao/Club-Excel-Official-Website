@@ -1,6 +1,7 @@
 "use client";
 
 import { EventFormField } from "@prisma/client";
+import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import axios from "axios";
 import {
   Calendar,
@@ -210,12 +211,15 @@ export default function RegisterEventPage() {
           <div className="grid gap-4 text-sm text-neutral-400 sm:grid-cols-2">
             <div className="flex items-center gap-3">
               <Calendar className="h-4 w-4 text-blue-400" />
-              {startDate.toLocaleDateString("en-IN")}
+              {startDate.toLocaleDateString("en-IN", {
+                timeZone: EVENT_TIME_ZONE,
+              })}
             </div>
 
             <div className="flex items-center gap-3">
               <Clock className="h-4 w-4 text-blue-400" />
               {startDate.toLocaleTimeString("en-IN", {
+                timeZone: EVENT_TIME_ZONE,
                 hour: "2-digit",
                 minute: "2-digit",
               })}

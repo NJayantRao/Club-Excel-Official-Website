@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import Link from "next/link";
 import {
   Calendar,
@@ -94,10 +95,16 @@ const EventDetailsModal = ({
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {[
-              ["Date", new Date(event.startAt).toLocaleDateString("en-IN")],
+              [
+                "Date",
+                new Date(event.startAt).toLocaleDateString("en-IN", {
+                  timeZone: EVENT_TIME_ZONE,
+                }),
+              ],
               [
                 "Start",
                 new Date(event.startAt).toLocaleTimeString("en-IN", {
+                  timeZone: EVENT_TIME_ZONE,
                   hour: "2-digit",
                   minute: "2-digit",
                 }),
@@ -180,12 +187,15 @@ const EventCard = ({ event }: { event: EventItem }) => {
             {
               icon: Calendar,
               label: "Date",
-              val: new Date(event.startAt).toLocaleDateString("en-IN"),
+              val: new Date(event.startAt).toLocaleDateString("en-IN", {
+                timeZone: EVENT_TIME_ZONE,
+              }),
             },
             {
               icon: Clock,
               label: "Time",
               val: new Date(event.startAt).toLocaleTimeString("en-IN", {
+                timeZone: EVENT_TIME_ZONE,
                 hour: "2-digit",
                 minute: "2-digit",
               }),

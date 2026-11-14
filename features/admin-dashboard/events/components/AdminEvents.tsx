@@ -9,6 +9,11 @@ import Popup, { PopupType } from "../../shared/components/Popup";
 import EventModal, { EventFormData } from "./EventModal";
 import { Pagination } from "@/components/ui/Pagination";
 import Link from "next/link";
+import {
+  EVENT_TIME_ZONE,
+  isoToLocalInput,
+  localInputToISO,
+} from "@/lib/datetime";
 
 interface PopupState {
   show: boolean;
@@ -151,21 +156,13 @@ const AdminEvents = () => {
       status: event.status,
       venue: event.venue ?? "",
 
-      startAt: event.startAt
-        ? new Date(event.startAt).toISOString().slice(0, 16)
-        : "",
+      startAt: isoToLocalInput(event.startAt),
 
-      endAt: event.endAt
-        ? new Date(event.endAt).toISOString().slice(0, 16)
-        : "",
+      endAt: isoToLocalInput(event.endAt),
 
-      registrationStart: event.registrationStart
-        ? new Date(event.registrationStart).toISOString().slice(0, 16)
-        : "",
+      registrationStart: isoToLocalInput(event.registrationStart),
 
-      registrationEnd: event.registrationEnd
-        ? new Date(event.registrationEnd).toISOString().slice(0, 16)
-        : "",
+      registrationEnd: isoToLocalInput(event.registrationEnd),
 
       capacity: event.capacity?.toString() ?? "",
 
@@ -199,18 +196,18 @@ const AdminEvents = () => {
       fd.append("status", form.status);
       fd.append("venue", form.venue);
 
-      fd.append("startAt", form.startAt);
+      fd.append("startAt", localInputToISO(form.startAt));
 
       if (form.endAt) {
-        fd.append("endAt", form.endAt);
+        fd.append("endAt", localInputToISO(form.endAt));
       }
 
       if (form.registrationStart) {
-        fd.append("registrationStart", form.registrationStart);
+        fd.append("registrationStart", localInputToISO(form.registrationStart));
       }
 
       if (form.registrationEnd) {
-        fd.append("registrationEnd", form.registrationEnd);
+        fd.append("registrationEnd", localInputToISO(form.registrationEnd));
       }
 
       if (form.capacity) {
@@ -366,7 +363,9 @@ const AdminEvents = () => {
               <div className="space-y-1 text-xs text-neutral-500">
                 <p>
                   <span className="text-neutral-400">Start:</span>{" "}
-                  {new Date(event.startAt).toLocaleString()}
+                  {new Date(event.startAt).toLocaleString("en-IN", {
+                    timeZone: EVENT_TIME_ZONE,
+                  })}
                 </p>
 
                 {event.venue && (

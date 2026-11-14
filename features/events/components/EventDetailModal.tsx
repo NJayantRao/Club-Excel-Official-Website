@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import { Calendar, Clock, MapPin, Users, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { EventStatusType } from "@prisma/client";
@@ -74,12 +75,15 @@ export default function EventDetailsModal({
         <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2 text-neutral-400">
             <Calendar className="h-4 w-4 text-blue-400" />
-            {new Date(event.startAt).toLocaleDateString("en-IN")}
+            {new Date(event.startAt).toLocaleDateString("en-IN", {
+              timeZone: EVENT_TIME_ZONE,
+            })}
           </div>
 
           <div className="flex items-center gap-2 text-neutral-400">
             <Clock className="h-4 w-4 text-blue-400" />
             {new Date(event.startAt).toLocaleTimeString("en-IN", {
+              timeZone: EVENT_TIME_ZONE,
               hour: "2-digit",
               minute: "2-digit",
             })}

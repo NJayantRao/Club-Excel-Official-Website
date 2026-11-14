@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type WheelEvent } from "react";
+import { isoToLocalInput, localInputToISO } from "@/lib/datetime";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -41,15 +42,7 @@ interface EditEventModalProps {
 const blurOnWheel = (e: WheelEvent<HTMLInputElement>) => e.currentTarget.blur();
 
 function toInputDate(value?: string | null) {
-  if (!value) return "";
-
-  const date = new Date(value);
-
-  const offset = date.getTimezoneOffset();
-
-  const local = new Date(date.getTime() - offset * 60000);
-
-  return local.toISOString().slice(0, 16);
+  return isoToLocalInput(value);
 }
 
 export default function EditEventModal({
@@ -139,13 +132,13 @@ export default function EditEventModal({
 
       formData.append("venue", venue.trim());
 
-      formData.append("startAt", startAt);
+      formData.append("startAt", localInputToISO(startAt));
 
-      formData.append("endAt", endAt);
+      formData.append("endAt", localInputToISO(endAt));
 
-      formData.append("registrationStart", registrationStart);
+      formData.append("registrationStart", localInputToISO(registrationStart));
 
-      formData.append("registrationEnd", registrationEnd);
+      formData.append("registrationEnd", localInputToISO(registrationEnd));
 
       formData.append("capacity", capacity);
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { EventType } from "@prisma/client";
 import EditEventModal from "./EditEventModal";
+import { EVENT_TIME_ZONE } from "@/lib/datetime";
 
 interface EventOverviewProps {
   id: string;
@@ -202,14 +203,18 @@ export default function EventOverview({ id }: EventOverviewProps) {
 
               <DetailCard
                 label="Start Date"
-                value={new Date(event.startAt).toLocaleString()}
+                value={new Date(event.startAt).toLocaleString("en-IN", {
+                  timeZone: EVENT_TIME_ZONE,
+                })}
               />
 
               <DetailCard
                 label="Registration Ends"
                 value={
                   event.registrationEnd
-                    ? new Date(event.registrationEnd).toLocaleString()
+                    ? new Date(event.registrationEnd).toLocaleString("en-IN", {
+                        timeZone: EVENT_TIME_ZONE,
+                      })
                     : "Not Configured"
                 }
               />
