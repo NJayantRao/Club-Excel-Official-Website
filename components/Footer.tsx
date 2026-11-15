@@ -17,8 +17,8 @@ const Footer = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
           <div className="lg:col-span-2 space-y-6">
-            <a
-              href="#"
+            <Link
+              href="/"
               className="text-2xl font-bold tracking-tighter text-white flex items-center gap-4"
             >
               <Image
@@ -27,7 +27,7 @@ const Footer = () => {
                 className="w-12 h-12 object-contain"
               />
               CLUB EXCEL
-            </a>
+            </Link>
             <p className="text-neutral-400 text-sm max-w-md leading-relaxed">
               National Institute of Science and Technology.
               <br />
@@ -90,20 +90,44 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a
-                  href="#domains"
-                  className="hover:text-white transition-colors hover-trigger"
-                >
-                  Domains
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#about"
+                <Link
+                  href="/#about"
                   className="hover:text-white transition-colors hover-trigger"
                 >
                   About
-                </a>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/#domains"
+                  className="hover:text-white transition-colors hover-trigger"
+                >
+                  Domains
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/achievements"
+                  className="hover:text-white transition-colors hover-trigger"
+                >
+                  Achievements
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/events"
+                  className="hover:text-white transition-colors hover-trigger"
+                >
+                  Events
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/our-team"
+                  className="hover:text-white transition-colors hover-trigger"
+                >
+                  Our Team
+                </Link>
               </li>
               <li>
                 <Link

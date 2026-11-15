@@ -4,7 +4,7 @@ import uploadImageToCloudinary from "@/lib/upload-image-cloudinary";
 import { requireAdminAuth } from "@/lib/authorize-admin";
 import { MediaUsageType } from "@prisma/client";
 import { revalidateTag, unstable_cache } from "next/cache";
-import { attachMedia } from "@/lib/media";
+import { attachMediaBatch } from "@/lib/media";
 
 const getCachedGallery = unstable_cache(
   async (skip: number, limit: number) => {
@@ -130,17 +130,17 @@ export async function POST(request: NextRequest) {
         .map((photo) => uploadImageToCloudinary(photo, "gallery"))
     );
 
-    await prisma.$transaction(async (tx) => {
-      for (const { url, publicId } of uploadedPhotos) {
-        await attachMedia(
+    await prisma.$transaction(
+      async (tx) => {
+        await attachMediaBatch(
           MediaUsageType.GALLERY,
           album.id,
-          url,
-          publicId,
+          uploadedPhotos,
           tx as any
         );
-      }
-    });
+      },
+      { timeout: 20000 }
+    );
 
     revalidateTag("gallery", "max");
 

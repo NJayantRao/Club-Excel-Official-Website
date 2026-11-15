@@ -8,6 +8,7 @@ This repository contains the development code for the Club Excel website, a plat
 - [Key Features](#key-features) ✨
 - [Tech Stack](#tech-stack) 💻
 - [Installation](#installation) ⚙️
+- [Available Scripts](#available-scripts) 🛠️
 - [Usage](#usage) 💡
 - [Project Structure](#project-structure) 📂
 - [API Reference](#api-reference) 🔗
@@ -33,6 +34,7 @@ The Club Excel website is a comprehensive platform developed using Next.js and R
 - **Image Uploads**: Seamlessly upload images to Cloudinary for events, members, and gallery.
 - **Responsive Design**: A modern, visually appealing UI that adapts to various screen sizes.
 - **Interactive Elements**: Utilizes AOS for scroll animations, custom cursors, and tilt effects for an engaging user experience.
+- **SEO Ready**: Auto-generated `sitemap.xml` and `robots.txt`.
 
 ## Tech Stack 💻
 
@@ -59,6 +61,8 @@ To set up the project locally, follow these steps:
     npm install
     ```
 
+    This also runs `prisma generate` automatically (see the `postinstall` script below).
+
 3.  **Set up environment variables:**
     Create a `.env` file in the root directory and populate it with the necessary variables. A `.env.sample` file is provided for reference. Ensure you set up the `DATABASE_URL` for PostgreSQL and Cloudinary credentials.
 
@@ -69,7 +73,11 @@ To set up the project locally, follow these steps:
     CLOUDINARY_API_SECRET="your-api-secret"
     NEXTAUTH_SECRET="your-nextauth-secret"
     NEXTAUTH_URL="http://localhost:3000"
+    NEXT_PUBLIC_API_URL="http://localhost:3000/api"
+    NEXT_PUBLIC_SITE_URL="http://localhost:3000"
     ```
+
+    > `NEXT_PUBLIC_SITE_URL` is the address of the website itself (no `/api`, no trailing slash). It is used to build the links in `sitemap.xml` and `robots.txt`. In production, set it to your real domain.
 
 4.  **Generate Prisma Client and run migrations:**
 
@@ -86,6 +94,94 @@ To set up the project locally, follow these steps:
 
 6.  **Access the application:**
     Open `http://localhost:3000` in your browser.
+
+## Available Scripts 🛠️
+
+All scripts are run from the project root with `npm run <script-name>`. Scripts that talk to the database or Cloudinary read their settings from your `.env` file, so complete [Installation](#installation) first.
+
+### Development scripts
+
+| Command          | What it does                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| `npm run dev`    | Starts the Next.js development server at `http://localhost:3000` with hot reload.           |
+| `npm run build`  | Creates an optimized production build. Run this to check for build errors before deploying. |
+| `npm run start`  | Serves the production build. Run `npm run build` first.                                     |
+| `npm run lint`   | Runs ESLint to find code problems.                                                          |
+| `npm run format` | Formats every file in the project with Prettier.                                            |
+
+### Automatic scripts
+
+These run on their own, so you normally don't call them yourself.
+
+| Script        | When it runs                                                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `postinstall` | After every `npm install`. Runs `prisma generate` so the Prisma Client always matches `schema.prisma`.                                         |
+| `prepare`     | After `npm install`. Sets up Husky Git hooks. Together with `lint-staged`, staged files are auto-formatted with Prettier each time you commit. |
+
+### Database and data scripts
+
+These are TypeScript files in the `scripts/` folder, run with `tsx`.
+
+| Command                      | What it does                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| `npm run signup-admin`       | Creates an admin account (password is hashed with bcrypt) so you can sign in to the dashboard. |
+| `npm run seed-members`       | Adds club members to the database and uploads their profile photos to Cloudinary.              |
+| `npm run seed-alumni`        | Adds alumni (role `ALUMNI`) to the database and uploads their photos to Cloudinary.            |
+| `npm run cleanup-cloudinary` | Finds Cloudinary images that no database record uses, and optionally deletes them.             |
+
+> `scripts/seed-member-links.ts` (adds social links to existing members) has no npm shortcut. Run it with `npx tsx scripts/seed-member-links.ts`, or add `"seed-member-links": "tsx scripts/seed-member-links.ts"` to `package.json`.
+
+#### `npm run signup-admin`
+
+Creates the first administrator. The name, email and password are written inside `scripts/admin-signup.ts`.
+
+1. Open `scripts/admin-signup.ts` and set your own `name`, `email` and `password`.
+2. Run `npm run signup-admin`.
+3. Sign in at `/sign-in` with those details.
+
+Do not commit a real password. Change it back to a placeholder after running. If an admin with that email already exists, the script fails with a duplicate-email error.
+
+#### `npm run seed-members` and `npm run seed-alumni`
+
+Both work the same way. The people to add are listed in the `members` (or `alumni`) array at the top of the script.
+
+1. Put each person's photo in the `public/members/` folder.
+2. Edit the array in `scripts/seed-members.ts` or `scripts/seed-alumni.ts`. Each entry takes `name`, `email`, `phone`, `imageUrl` (for example `/members/avatar.jpg`), `skills`, `year`, and for alumni `designation`.
+3. Run the script.
+
+Each email must be unique. Running a script twice with the same emails fails with a unique-constraint error on `email`.
+
+#### `scripts/seed-member-links.ts`
+
+Run with `npx tsx scripts/seed-member-links.ts`. First fill in the `links` array in the script with each member's `memberId`, `platform` (for example `linkedin`) and `url`, then run it. You can find a member's id in Prisma Studio (`npx prisma studio`).
+
+#### `npm run cleanup-cloudinary`
+
+When an upload fails halfway, images can be left in Cloudinary with no database record, and nothing deletes them later. This script finds them by comparing the `club-members`, `event-images`, `gallery` and `club-achievements` folders against the `Media` table.
+
+```bash
+# 1. Dry run (default): lists the unreferenced images, deletes nothing
+npm run cleanup-cloudinary
+
+# 2. Delete the unreferenced images
+npm run cleanup-cloudinary -- --delete
+
+# Only scan specific folders
+npm run cleanup-cloudinary -- --folder=gallery --folder=event-images
+```
+
+Always do the dry run first and read the list. Check that "Images referenced in database" looks right. If `DATABASE_URL` points at the wrong database, every image will look unreferenced. Deletion cannot be undone. The space between `--` and `--delete` is required.
+
+### Prisma commands
+
+Prisma is used through `npx` and has no npm script shortcut.
+
+| Command                                | What it does                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `npx prisma generate`                  | Regenerates the Prisma Client (also runs automatically on install).                            |
+| `npx prisma migrate dev --name <name>` | Creates and applies a migration after you change `schema.prisma`.                              |
+| `npx prisma studio`                    | Opens a browser UI to view and edit database rows.                                             |
+| `npx prisma db pull`                   | Overwrites `schema.prisma` from the live database. Use with care and back up the schema first. |
 
 ## Usage 💡
 
@@ -185,7 +281,9 @@ club-website-dev/
 │   ├── recruitment/
 │   │   └── page.tsx
 │   ├── globals.css
-│   └── layout.tsx
+│   ├── layout.tsx
+│   ├── robots.ts                  # Serves /robots.txt
+│   └── sitemap.ts                 # Serves /sitemap.xml (static pages + open events)
 ├── components/                    # Site-wide chrome + genuinely shared UI atoms only
 │   ├── Footer.tsx
 │   ├── Home.tsx                   # Composes features/home/components/*
@@ -280,6 +378,7 @@ club-website-dev/
 ├── lib/                            # Cross-cutting infrastructure: DB client, auth, uploads, shared validators/utils
 │   ├── authorize-admin.ts
 │   ├── cloudinary.ts
+│   ├── datetime.ts                 # Local-time <-> UTC helpers for event dates, IST display zone
 │   ├── destroy-cloudinary-image.ts
 │   ├── media.ts
 │   ├── prisma.ts
@@ -299,8 +398,10 @@ club-website-dev/
 │   ├── migrations/
 │   │
 │   └── schema.prisma
-├── scripts/
+├── scripts/                        # One-off maintenance scripts, run with tsx (see Available Scripts)
 │   ├── admin-signup.ts
+│   ├── cleanup-cloudinary.ts
+│   ├── seed-alumni.ts
 │   ├── seed-member-links.ts
 │   └── seed-members.ts
 ├── tailwind.config.ts
@@ -402,10 +503,10 @@ Contributions are welcome! Please follow these guidelines:
 
 ## Important Links 🌐
 
-- **Live Demo**: https://club-website-dev.vercel.app
+- **Live Demo**: https://www.clubexcel.in
 
 ## Footer 👣
 
 © 2026 Club Excel. Built for the future.
 
-[Repository](https://github.com/NJayantRao/club-website-dev)
+[Repository](https://github.com/clubexcel/Club-Excel-Official-Website)

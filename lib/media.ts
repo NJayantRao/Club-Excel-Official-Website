@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { MediaUsageType, Prisma } from "@prisma/client";
+import { randomUUID } from "crypto";
 import { destroyCloudinaryImages } from "./destroy-cloudinary-image";
 
 type Db = Prisma.TransactionClient | typeof prisma;
@@ -19,6 +20,40 @@ export async function attachMedia(
         create: { type, entityId },
       },
     },
+  });
+}
+
+/**
+ * Attaches many media items in just two queries (instead of two per item).
+ * Use this for multi-photo uploads to avoid interactive transaction timeouts.
+ */
+export async function attachMediaBatch(
+  type: MediaUsageType,
+  entityId: string,
+  items: { url: string; publicId: string | null }[],
+  db: Db = prisma
+) {
+  if (!items.length) return;
+
+  const ids = items.map(() => randomUUID());
+  const base = Date.now();
+
+  await db.media.createMany({
+    data: items.map((item, i) => ({
+      id: ids[i],
+      url: item.url,
+      publicId: item.publicId,
+    })),
+  });
+
+  await db.mediaUsage.createMany({
+    data: ids.map((mediaId, i) => ({
+      type,
+      entityId,
+      mediaId,
+      // keep upload order, since listings sort by createdAt
+      createdAt: new Date(base + i),
+    })),
   });
 }
 

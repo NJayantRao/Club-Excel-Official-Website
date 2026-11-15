@@ -4,7 +4,7 @@ import uploadImageToCloudinary from "@/lib/upload-image-cloudinary";
 import { requireAdminAuth } from "@/lib/authorize-admin";
 import { MediaUsageType } from "@prisma/client";
 import { revalidateTag } from "next/cache";
-import { attachMedia, removeMedia } from "@/lib/media";
+import { attachMediaBatch, removeMedia } from "@/lib/media";
 
 export async function PATCH(
   request: NextRequest,
@@ -62,17 +62,17 @@ export async function PATCH(
         photos.map((photo) => uploadImageToCloudinary(photo, "gallery"))
       );
 
-      await prisma.$transaction(async (tx) => {
-        for (const { url, publicId } of uploadedPhotos) {
-          await attachMedia(
+      await prisma.$transaction(
+        async (tx) => {
+          await attachMediaBatch(
             MediaUsageType.GALLERY,
             id,
-            url,
-            publicId,
+            uploadedPhotos,
             tx as any
           );
-        }
-      });
+        },
+        { timeout: 20000 }
+      );
     }
 
     revalidateTag("gallery", "max");
@@ -134,13 +134,16 @@ export async function DELETE(
       );
     }
 
-    await prisma.$transaction(async (tx) => {
-      await removeMedia(MediaUsageType.GALLERY, id, tx);
+    await prisma.$transaction(
+      async (tx) => {
+        await removeMedia(MediaUsageType.GALLERY, id, tx);
 
-      await tx.galleryAlbum.delete({
-        where: { id },
-      });
-    });
+        await tx.galleryAlbum.delete({
+          where: { id },
+        });
+      },
+      { timeout: 30000 }
+    );
 
     revalidateTag("gallery", "max");
 

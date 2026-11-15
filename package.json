@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "signup-admin": "tsx scripts/admin-signup.ts",
     "seed-alumni": "tsx scripts/seed-alumni.ts",
-    "seed-members": "tsx scripts/seed-members.ts"
+    "seed-members": "tsx scripts/seed-members.ts",
+    "cleanup-cloudinary": "tsx scripts/cleanup-cloudinary.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,scss,md}": [
