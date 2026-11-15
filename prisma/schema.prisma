@@ -59,6 +59,7 @@ model EventFormField {
   type        FieldType
   required    Boolean   @default(false)
   placeholder String?
+  options     String[]  @default([])
   order       Int?
   createdAt   DateTime  @default(now())
   event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -149,6 +150,7 @@ model RecruitmentFormField {
   type          FieldType
   required      Boolean          @default(false)
   placeholder   String?
+  options       String[]         @default([])
   order         Int?
   createdAt     DateTime         @default(now())
   recruitment   RecruitmentDrive @relation(fields: [recruitmentId], references: [id], onDelete: Cascade)
@@ -164,7 +166,7 @@ model RecruitmentResponse {
   updatedAt      DateTime         @updatedAt
   branch         String
   gender         Gender
-  hackerrankId   String
+  codingProfile  String           @map("hackerrankId")
   locality       Locality
   nistEmail      String
   personalEmail  String
@@ -219,6 +221,7 @@ enum EventStatusType {
 enum FieldType {
   TEXT
   TEXTAREA
+  SELECT
   URL
   NUMBER
   EMAIL

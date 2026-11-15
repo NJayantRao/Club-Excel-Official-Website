@@ -154,6 +154,23 @@ export async function POST(
       }
     }
 
+    for (const field of event.formFields) {
+      if (field.type !== "SELECT") continue;
+
+      const value = answers?.[field.name];
+      if (value === undefined || value === null || value === "") continue;
+
+      if (typeof value !== "string" || !field.options.includes(value)) {
+        return Response.json(
+          {
+            success: false,
+            message: `${field.label}: please choose one of the listed options.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const response = await prisma.eventResponse.create({
       data: {
         eventId: id,

@@ -1,6 +1,7 @@
 "use client";
 
 import { EventFormField } from "@prisma/client";
+import LinkifiedText from "@/components/ui/LinkifiedText";
 import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import axios from "axios";
 import {
@@ -204,8 +205,8 @@ export default function RegisterEventPage() {
         <div className="mb-8 rounded-[2rem] border border-white/10 bg-white/[0.03] p-8">
           <h1 className="mb-3 text-4xl font-bold">{event.title}</h1>
 
-          <p className="mb-8 leading-relaxed text-neutral-400">
-            {event?.description}
+          <p className="mb-8 whitespace-pre-line leading-relaxed text-neutral-400">
+            <LinkifiedText text={event?.description ?? ""} />
           </p>
 
           <div className="grid gap-4 text-sm text-neutral-400 sm:grid-cols-2">
@@ -331,7 +332,32 @@ export default function RegisterEventPage() {
                       )}
                     </label>
 
-                    {field.type === "TEXTAREA" ? (
+                    {field.type === "SELECT" ? (
+                      <select
+                        value={answers[field.name] ?? ""}
+                        onChange={(e) =>
+                          updateAnswer(field.name, e.target.value)
+                        }
+                        className={`w-full rounded-xl border bg-black/40 px-4 py-3 outline-none transition focus:border-blue-500 ${
+                          errors[field.name]
+                            ? "border-red-500/50"
+                            : "border-white/10"
+                        }`}
+                      >
+                        <option value="" className="bg-neutral-900">
+                          {field.placeholder || "Select an option"}
+                        </option>
+                        {field.options.map((option) => (
+                          <option
+                            key={option}
+                            value={option}
+                            className="bg-neutral-900"
+                          >
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    ) : field.type === "TEXTAREA" ? (
                       <textarea
                         rows={5}
                         value={answers[field.name] ?? ""}

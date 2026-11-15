@@ -22,7 +22,7 @@ export interface RecruitmentResponseRecord {
   nistEmail: string;
   personalEmail: string;
   branch: string;
-  hackerrankId: string;
+  codingProfile: string;
   phoneNumber: string;
   locality: "LOCALITE" | "HOSTELITE";
   techStack: string;
@@ -40,7 +40,7 @@ interface ResponseFormData {
   nistEmail: string;
   personalEmail: string;
   branch: string;
-  hackerrankId: string;
+  codingProfile: string;
   phoneNumber: string;
   locality: "LOCALITE" | "HOSTELITE";
   techStack: string;
@@ -80,7 +80,7 @@ const toFormData = (
     nistEmail: record.nistEmail,
     personalEmail: record.personalEmail,
     branch: record.branch,
-    hackerrankId: record.hackerrankId,
+    codingProfile: record.codingProfile,
     phoneNumber: record.phoneNumber,
     locality: record.locality,
     techStack: record.techStack,
@@ -114,7 +114,7 @@ const validate = (
   }
 
   if (!form.branch.trim()) errors.branch = "Required";
-  if (!form.hackerrankId.trim()) errors.hackerrankId = "Required";
+  if (!form.codingProfile.trim()) errors.codingProfile = "Required";
   if (!form.techStack.trim()) errors.techStack = "Required";
 
   if (!form.nistEmail.trim()) {
@@ -259,10 +259,10 @@ const EditRecruitmentResponseModal = ({
 
       <div className="grid grid-cols-2 gap-4">
         <TextField
-          label="HackerRank ID"
-          value={form.hackerrankId}
-          onChange={(e) => updateField("hackerrankId", e.target.value)}
-          error={errors.hackerrankId}
+          label="Coding Profile ID"
+          value={form.codingProfile}
+          onChange={(e) => updateField("codingProfile", e.target.value)}
+          error={errors.codingProfile}
         />
         <TextField
           label="Phone Number"

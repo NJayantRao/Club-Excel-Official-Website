@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/authorize-admin";
-import { EventType, MediaUsageType } from "@prisma/client";
+import { EventType, MediaUsageType, Prisma } from "@prisma/client";
 import uploadImageToCloudinary from "@/lib/upload-image-cloudinary";
 import { revalidateTag } from "next/cache";
 import { getMediaUrl, removeMedia, replaceMedia } from "@/lib/media";
@@ -61,49 +61,48 @@ export async function PATCH(
       newImagePublicId = uploaded.publicId;
     }
 
-    const event = await prisma.$transaction(async (tx) => {
-      const updated = await tx.event.update({
-        where: {
-          id,
-        },
-        data: {
-          ...(title !== null && { title }),
-          ...(description !== null && { description }),
-          ...(type !== null && { type }),
-          ...(startAt !== null && { startAt: new Date(startAt) }),
-          ...(endAt !== null && {
-            endAt: endAt ? new Date(endAt) : null,
-          }),
-          ...(venue !== null && { venue }),
-          ...(registrationStart !== null && {
-            registrationStart: registrationStart
-              ? new Date(registrationStart)
-              : null,
-          }),
-          ...(registrationEnd !== null && {
-            registrationEnd: registrationEnd ? new Date(registrationEnd) : null,
-          }),
-          ...(capacity !== null && {
-            capacity: capacity ? Number(capacity) : null,
-          }),
-          ...(whatsappLink !== null && {
-            whatsappLink: whatsappLink || null,
-          }),
-        },
-      });
+    const data: Prisma.EventUpdateInput = {
+      ...(title !== null && { title }),
+      ...(description !== null && { description }),
+      ...(type !== null && { type }),
+      ...(startAt !== null && { startAt: new Date(startAt) }),
+      ...(endAt !== null && {
+        endAt: endAt ? new Date(endAt) : null,
+      }),
+      ...(venue !== null && { venue }),
+      ...(registrationStart !== null && {
+        registrationStart: registrationStart
+          ? new Date(registrationStart)
+          : null,
+      }),
+      ...(registrationEnd !== null && {
+        registrationEnd: registrationEnd ? new Date(registrationEnd) : null,
+      }),
+      ...(capacity !== null && {
+        capacity: capacity ? Number(capacity) : null,
+      }),
+      ...(whatsappLink !== null && {
+        whatsappLink: whatsappLink || null,
+      }),
+    };
 
-      if (newImageUrl) {
-        await replaceMedia(
-          MediaUsageType.EVENT,
-          id,
-          newImageUrl,
-          newImagePublicId,
-          tx
-        );
-      }
+    // A transaction is only needed when the image is replaced too.
+    // Plain edits (like the description) use one simple query.
+    const event = newImageUrl
+      ? await prisma.$transaction(async (tx) => {
+          const updated = await tx.event.update({ where: { id }, data });
 
-      return updated;
-    });
+          await replaceMedia(
+            MediaUsageType.EVENT,
+            id,
+            newImageUrl,
+            newImagePublicId,
+            tx
+          );
+
+          return updated;
+        })
+      : await prisma.event.update({ where: { id }, data });
 
     const imageUrl =
       newImageUrl ?? (await getMediaUrl(MediaUsageType.EVENT, id));

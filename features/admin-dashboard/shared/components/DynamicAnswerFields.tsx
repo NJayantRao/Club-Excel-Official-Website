@@ -5,8 +5,17 @@ import { ReadOnlyField, TextField } from "./FormField";
 export interface DynamicFormFieldLite {
   name: string;
   label: string;
-  type: "TEXT" | "TEXTAREA" | "URL" | "NUMBER" | "EMAIL" | "PHONE" | "FILE";
+  type:
+    | "TEXT"
+    | "TEXTAREA"
+    | "URL"
+    | "NUMBER"
+    | "EMAIL"
+    | "PHONE"
+    | "FILE"
+    | "SELECT";
   required: boolean;
+  options?: string[];
 }
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
@@ -43,6 +52,10 @@ export const validateDynamicAnswers = (
         break;
       case "PHONE":
         if (!PHONE_RE.test(value)) errors[field.name] = "Invalid phone number";
+        break;
+      case "SELECT":
+        if (!field.options?.includes(value))
+          errors[field.name] = "Invalid option";
         break;
       default:
         break;
@@ -84,6 +97,41 @@ const DynamicAnswerFields = ({
             label={field.label}
             value={String(rawAnswers?.[field.name] ?? "")}
           />
+        ) : field.type === "SELECT" ? (
+          <div key={field.name}>
+            <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-black">
+              {field.label}
+              {errors[field.name] && (
+                <span className="ml-2 normal-case tracking-normal text-red-400">
+                  — {errors[field.name]}
+                </span>
+              )}
+            </label>
+            <select
+              value={answers[field.name] ?? ""}
+              onChange={(e) => onChange(field.name, e.target.value)}
+              className={`w-full mt-1 rounded-xl bg-white/5 border px-4 py-3 text-white text-sm outline-none transition ${
+                errors[field.name]
+                  ? "border-red-500"
+                  : "border-white/10 focus:border-white/20"
+              }`}
+            >
+              <option value="" className="bg-[#111]">
+                Select...
+              </option>
+              {answers[field.name] &&
+                !(field.options ?? []).includes(answers[field.name]) && (
+                  <option value={answers[field.name]} className="bg-[#111]">
+                    {answers[field.name]} (no longer an option)
+                  </option>
+                )}
+              {(field.options ?? []).map((option) => (
+                <option key={option} value={option} className="bg-[#111]">
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
         ) : field.type === "TEXTAREA" ? (
           <div key={field.name}>
             <label className="text-[10px] uppercase tracking-widest text-neutral-500 font-black">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import LinkifiedText from "@/components/ui/LinkifiedText";
 import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import { Calendar, Clock, MapPin, Users, X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -67,8 +68,8 @@ export default function EventDetailsModal({
         </div>
 
         {event.description && (
-          <p className="mb-6 text-sm leading-relaxed text-neutral-400">
-            {event.description}
+          <p className="mb-6 whitespace-pre-line text-sm leading-relaxed text-neutral-400">
+            <LinkifiedText text={event.description} />
           </p>
         )}
 

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/authorize-admin";
+import { buildFieldUpdate } from "@/lib/form-field-options";
 
 export async function PATCH(
   request: NextRequest,
@@ -41,13 +42,20 @@ export async function PATCH(
       );
     }
 
+    const result = buildFieldUpdate(data, existingField);
+
+    if ("error" in result) {
+      return Response.json(
+        { success: false, message: result.error },
+        { status: 400 }
+      );
+    }
+
     const formField = await prisma.eventFormField.update({
       where: {
         id: fieldId,
       },
-      data: {
-        ...data,
-      },
+      data: result.update,
     });
 
     return Response.json(

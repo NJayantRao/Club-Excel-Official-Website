@@ -1,7 +1,7 @@
 "use client";
 
 import { FieldType } from "@prisma/client";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface FieldValues {
@@ -10,6 +10,7 @@ interface FieldValues {
   type: FieldType;
   required: boolean;
   placeholder: string;
+  options: string[];
 }
 
 interface Props {
@@ -28,7 +29,10 @@ const EMPTY_VALUES: FieldValues = {
   type: FieldType.TEXT,
   required: false,
   placeholder: "",
+  options: [],
 };
+
+const MAX_OPTIONS = 50;
 
 export default function FieldModal({
   open,
@@ -53,6 +57,12 @@ export default function FieldModal({
     initialValues?.placeholder ?? ""
   );
 
+  const [options, setOptions] = useState<string[]>(
+    initialValues?.options?.length ? initialValues.options : [""]
+  );
+
+  const [optionsError, setOptionsError] = useState("");
+
   useEffect(() => {
     if (open) {
       const values = initialValues ?? EMPTY_VALUES;
@@ -61,14 +71,58 @@ export default function FieldModal({
       setType(values.type);
       setRequired(values.required);
       setPlaceholder(values.placeholder);
+      setOptions(values.options?.length ? values.options : [""]);
+      setOptionsError("");
     }
   }, [open, initialValues]);
 
   if (!open) return null;
 
+  const isSelect = type === FieldType.SELECT;
+
+  const updateOption = (index: number, value: string) => {
+    setOptions((prev) => prev.map((o, i) => (i === index ? value : o)));
+    setOptionsError("");
+  };
+
+  const addOption = () => {
+    setOptions((prev) => (prev.length >= MAX_OPTIONS ? prev : [...prev, ""]));
+  };
+
+  const removeOption = (index: number) => {
+    setOptions((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      return next.length ? next : [""];
+    });
+  };
+
+  const handleSubmit = () => {
+    let cleanOptions: string[] = [];
+
+    if (isSelect) {
+      cleanOptions = Array.from(
+        new Set(options.map((o) => o.trim()).filter(Boolean))
+      );
+
+      if (cleanOptions.length === 0) {
+        setOptionsError("Add at least one option for the dropdown.");
+        return;
+      }
+    }
+
+    onSubmit({
+      label,
+      name,
+      type,
+      required,
+      placeholder,
+      options: cleanOptions,
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#0A0A0A] p-6">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/10 bg-[#0A0A0A] p-6">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-white">
             {isEditing ? "Edit Registration Field" : "Add Registration Field"}
@@ -115,16 +169,72 @@ export default function FieldModal({
 
             <select
               value={type}
-              onChange={(e) => setType(e.target.value as FieldType)}
+              onChange={(e) => {
+                setType(e.target.value as FieldType);
+                setOptionsError("");
+              }}
               className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
             >
               {Object.values(FieldType).map((field) => (
                 <option key={field} value={field} className="bg-[#111]">
-                  {field}
+                  {field === FieldType.SELECT ? "SELECT (dropdown)" : field}
                 </option>
               ))}
             </select>
           </div>
+
+          {isSelect && (
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="text-xs uppercase tracking-widest text-neutral-500">
+                  Dropdown Options
+                </label>
+
+                <button
+                  type="button"
+                  onClick={addOption}
+                  disabled={options.length >= MAX_OPTIONS}
+                  className="flex items-center gap-1 rounded-lg border border-white/10 px-3 py-1 text-xs text-white hover:bg-white/10 disabled:opacity-40"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add option
+                </button>
+              </div>
+
+              <div className="mt-2 space-y-2">
+                {options.map((option, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      value={option}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addOption();
+                        }
+                      }}
+                      placeholder={`Option ${index + 1}`}
+                      maxLength={100}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => removeOption(index)}
+                      className="rounded-lg p-2 hover:bg-white/10"
+                      aria-label="Remove option"
+                    >
+                      <X className="h-4 w-4 text-neutral-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {optionsError && (
+                <p className="mt-2 text-xs text-red-400">{optionsError}</p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="text-xs uppercase tracking-widest text-neutral-500">
@@ -157,15 +267,7 @@ export default function FieldModal({
 
             <button
               disabled={loading}
-              onClick={() =>
-                onSubmit({
-                  label,
-                  name,
-                  type,
-                  required,
-                  placeholder,
-                })
-              }
+              onClick={handleSubmit}
               className="flex-1 rounded-xl bg-white py-3 font-semibold text-black"
             >
               {loading ? "Saving..." : isEditing ? "Save Changes" : "Create"}

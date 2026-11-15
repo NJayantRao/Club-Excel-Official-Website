@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LinkifiedText from "@/components/ui/LinkifiedText";
 import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import Link from "next/link";
 import {
@@ -127,7 +128,7 @@ const EventDetailsModal = ({
                 Details
               </h4>
               <p className="text-neutral-300 whitespace-pre-wrap text-sm leading-relaxed">
-                {event.description}
+                <LinkifiedText text={event.description} />
               </p>
             </div>
           )}

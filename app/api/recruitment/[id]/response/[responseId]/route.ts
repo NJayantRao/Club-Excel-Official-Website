@@ -113,8 +113,8 @@ export async function PATCH(
           branch: body.branch.trim(),
         }),
 
-        ...(body.hackerrankId !== undefined && {
-          hackerrankId: body.hackerrankId.trim(),
+        ...(body.codingProfile !== undefined && {
+          codingProfile: body.codingProfile.trim(),
         }),
 
         ...(body.phoneNumber !== undefined && {

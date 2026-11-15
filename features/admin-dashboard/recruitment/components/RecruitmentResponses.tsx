@@ -435,10 +435,10 @@ const RecruitmentResponses = ({ id }: RecruitmentResponsesProps) => {
 
                         <div>
                           <p className="mb-0.5 uppercase tracking-wider text-neutral-600">
-                            HackerRank ID
+                            Coding Profile ID
                           </p>
                           <p className="text-neutral-300">
-                            {response.hackerrankId}
+                            {response.codingProfile}
                           </p>
                         </div>
 

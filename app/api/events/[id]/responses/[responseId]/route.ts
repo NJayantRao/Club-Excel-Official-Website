@@ -179,6 +179,17 @@ export async function PATCH(
               );
             }
             break;
+          case "SELECT":
+            if (!field.options.includes(String(normalized))) {
+              return Response.json(
+                {
+                  success: false,
+                  message: `${field.label}: please choose one of the listed options.`,
+                },
+                { status: 400 }
+              );
+            }
+            break;
           default:
             break;
         }

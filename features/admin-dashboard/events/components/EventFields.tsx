@@ -21,6 +21,7 @@ interface EventFormField {
   type: FieldType;
   required: boolean;
   placeholder: string | null;
+  options: string[];
   order: number | null;
 }
 
@@ -30,6 +31,7 @@ interface FieldValues {
   type: FieldType;
   required: boolean;
   placeholder: string;
+  options: string[];
 }
 
 export default function EventFields({
@@ -220,6 +222,7 @@ export default function EventFields({
                 type: editingField.type,
                 required: editingField.required,
                 placeholder: editingField.placeholder ?? "",
+                options: editingField.options ?? [],
               }
             : undefined
         }

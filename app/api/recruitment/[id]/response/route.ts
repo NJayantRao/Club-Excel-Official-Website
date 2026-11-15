@@ -16,7 +16,7 @@ const REQUIRED_TEXT_FIELDS = [
   "nistEmail",
   "personalEmail",
   "branch",
-  "hackerrankId",
+  "codingProfile",
   "phoneNumber",
   "techStack",
 ] as const;
@@ -239,6 +239,17 @@ export async function POST(
             );
           }
           break;
+        case "SELECT":
+          if (!field.options.includes(String(normalized))) {
+            return Response.json(
+              {
+                success: false,
+                message: `${field.label}: please choose one of the listed options.`,
+              },
+              { status: 400 }
+            );
+          }
+          break;
         default:
           break;
       }
@@ -254,7 +265,7 @@ export async function POST(
         nistEmail: body.nistEmail.trim(),
         personalEmail: body.personalEmail.trim(),
         branch: body.branch.trim(),
-        hackerrankId: body.hackerrankId.trim(),
+        codingProfile: body.codingProfile.trim(),
         phoneNumber: body.phoneNumber.trim(),
         locality: body.locality,
         techStack: body.techStack.trim(),

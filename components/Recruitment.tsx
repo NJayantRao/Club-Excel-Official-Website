@@ -19,9 +19,18 @@ interface DriveFormField {
   id: string;
   name: string;
   label: string;
-  type: "TEXT" | "TEXTAREA" | "URL" | "NUMBER" | "EMAIL" | "PHONE" | "FILE";
+  type:
+    | "TEXT"
+    | "TEXTAREA"
+    | "URL"
+    | "NUMBER"
+    | "EMAIL"
+    | "PHONE"
+    | "FILE"
+    | "SELECT";
   required: boolean;
   placeholder: string | null;
+  options: string[];
 }
 
 interface DriveData {
@@ -50,7 +59,7 @@ const recruitmentSchema = z.object({
       "Use a non-institute email here"
     ),
   branch: z.string().min(1, "Branch is required"),
-  hackerrankId: z.string().min(1, "HackerRank ID is required"),
+  codingProfile: z.string().min(1, "Coding Profile ID is required"),
   phoneNumber: z.string().min(10, "Enter a valid phone number").max(15),
   locality: z.enum(["LOCALITE", "HOSTELITE"], {
     error: "Please select locality",
@@ -101,7 +110,7 @@ const Recruitment = ({ driveId }: RecruitmentProps) => {
     nistEmail: "",
     personalEmail: "",
     branch: "",
-    hackerrankId: "",
+    codingProfile: "",
     phoneNumber: "",
     locality: "HOSTELITE",
     techStack: "",
@@ -423,13 +432,13 @@ const Recruitment = ({ driveId }: RecruitmentProps) => {
                 onChange={handleChange}
               />
               <InputField
-                label="HackerRank ID"
+                label="Coding Profile ID"
                 icon={Code}
-                name="hackerrankId"
+                name="codingProfile"
                 type="text"
-                placeholder="Username"
-                error={errors.hackerrankId}
-                value={formData.hackerrankId}
+                placeholder="HackerRank, Codeforces, LeetCode... username"
+                error={errors.codingProfile}
+                value={formData.codingProfile}
                 onChange={handleChange}
               />
             </div>
@@ -509,7 +518,28 @@ const Recruitment = ({ driveId }: RecruitmentProps) => {
                       )}
                     </label>
 
-                    {field.type === "TEXTAREA" ? (
+                    {field.type === "SELECT" ? (
+                      <select
+                        value={answers[field.name] ?? ""}
+                        onChange={(e) =>
+                          handleAnswerChange(field.name, e.target.value)
+                        }
+                        className={`w-full rounded-2xl border bg-white/[0.03] px-4 py-4 text-sm text-white outline-none transition ${errors[field.name] ? "border-red-500/50" : "border-white/5 focus:border-blue-500/50"}`}
+                      >
+                        <option value="" className="bg-neutral-900">
+                          {field.placeholder || "Select an option"}
+                        </option>
+                        {(field.options ?? []).map((option) => (
+                          <option
+                            key={option}
+                            value={option}
+                            className="bg-neutral-900"
+                          >
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    ) : field.type === "TEXTAREA" ? (
                       <textarea
                         rows={4}
                         value={answers[field.name] ?? ""}

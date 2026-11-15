@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/authorize-admin";
+import {
+  sanitizeOptions,
+  SELECT_NEEDS_OPTION_MESSAGE,
+} from "@/lib/form-field-options";
 
 export async function POST(
   request: NextRequest,
@@ -32,7 +36,17 @@ export async function POST(
       required = false,
       placeholder,
       order,
+      options,
     } = await request.json();
+
+    const cleanOptions = type === "SELECT" ? sanitizeOptions(options) : [];
+
+    if (type === "SELECT" && cleanOptions.length === 0) {
+      return Response.json(
+        { success: false, message: SELECT_NEEDS_OPTION_MESSAGE },
+        { status: 400 }
+      );
+    }
 
     const event = await prisma.eventFormField.create({
       data: {
@@ -43,6 +57,7 @@ export async function POST(
         required,
         placeholder,
         order,
+        options: cleanOptions,
       },
     });
 
