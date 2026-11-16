@@ -5,6 +5,14 @@ import LinkifiedText from "@/components/ui/LinkifiedText";
 import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import axios from "axios";
 import {
+  filterGroupOptions,
+  findRollNumberField,
+  getAcademicYear,
+  isGroupAllowed,
+  isGroupField,
+  isGroupRuleEnabled,
+} from "@/lib/group-eligibility";
+import {
   Calendar,
   Clock,
   MapPin,
@@ -57,6 +65,18 @@ export default function RegisterEventPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Group rule (only for events listed in lib/group-eligibility.ts):
+  // the year is worked out from the roll number and filters the group options.
+  const rollField = isGroupRuleEnabled(id)
+    ? findRollNumberField(event?.formFields ?? [])
+    : undefined;
+  const ruleApplies = !!rollField;
+  const academicYear = getAcademicYear(
+    rollField ? answers[rollField.name] : ""
+  );
+  const isRuledGroup = (fieldName: string) =>
+    ruleApplies && isGroupField(fieldName);
+
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -74,6 +94,63 @@ export default function RegisterEventPage() {
       fetchEvent();
     }
   }, [id]);
+
+  // If the roll number changes, clear a chosen group that is no longer allowed
+  useEffect(() => {
+    if (!ruleApplies || !event) return;
+
+    setAnswers((prev) => {
+      const next = { ...prev };
+      let changed = false;
+
+      for (const field of event.formFields) {
+        if (field.type !== "SELECT" || !isGroupField(field.name)) continue;
+
+        const chosen = next[field.name];
+        if (!chosen) continue;
+
+        if (academicYear === null || !isGroupAllowed(chosen, academicYear)) {
+          delete next[field.name];
+          changed = true;
+        }
+      }
+
+      return changed ? next : prev;
+    });
+  }, [academicYear, event, ruleApplies]);
+
+  // Options/placeholder for a dropdown (the group dropdown is filtered by year)
+  const getSelectConfig = (field: EventFormField) => {
+    if (!isRuledGroup(field.name)) {
+      return {
+        options: field.options,
+        placeholder: field.placeholder || "Select an option",
+        disabled: false,
+      };
+    }
+
+    if (!answers[rollField!.name]?.trim()) {
+      return {
+        options: [] as string[],
+        placeholder: field.placeholder || "Enter Roll Number First",
+        disabled: true,
+      };
+    }
+
+    if (academicYear === null) {
+      return {
+        options: [] as string[],
+        placeholder: "Enter a valid roll number",
+        disabled: true,
+      };
+    }
+
+    return {
+      options: filterGroupOptions(field.options, academicYear),
+      placeholder: "Select your group",
+      disabled: false,
+    };
+  };
 
   const updateDetail = (key: keyof PersonalDetails, value: string) => {
     setDetails((prev) => ({ ...prev, [key]: value }));
@@ -94,6 +171,16 @@ export default function RegisterEventPage() {
       nextErrors.email = "Enter a valid email";
 
     for (const field of event?.formFields ?? []) {
+      if (
+        field.type === "SELECT" &&
+        isRuledGroup(field.name) &&
+        academicYear === null
+      ) {
+        nextErrors[rollField!.name] =
+          "Enter a valid roll number (e.g. 2024XXXXX)";
+        continue;
+      }
+
       if (field.required && !answers[field.name]?.trim()) {
         nextErrors[field.name] = `${field.label} is required`;
       }
@@ -333,30 +420,37 @@ export default function RegisterEventPage() {
                     </label>
 
                     {field.type === "SELECT" ? (
-                      <select
-                        value={answers[field.name] ?? ""}
-                        onChange={(e) =>
-                          updateAnswer(field.name, e.target.value)
-                        }
-                        className={`w-full rounded-xl border bg-black/40 px-4 py-3 outline-none transition focus:border-blue-500 ${
-                          errors[field.name]
-                            ? "border-red-500/50"
-                            : "border-white/10"
-                        }`}
-                      >
-                        <option value="" className="bg-neutral-900">
-                          {field.placeholder || "Select an option"}
-                        </option>
-                        {field.options.map((option) => (
-                          <option
-                            key={option}
-                            value={option}
-                            className="bg-neutral-900"
+                      (() => {
+                        const config = getSelectConfig(field);
+
+                        return (
+                          <select
+                            value={answers[field.name] ?? ""}
+                            disabled={config.disabled}
+                            onChange={(e) =>
+                              updateAnswer(field.name, e.target.value)
+                            }
+                            className={`w-full rounded-xl border bg-black/40 px-4 py-3 outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-60 ${
+                              errors[field.name]
+                                ? "border-red-500/50"
+                                : "border-white/10"
+                            }`}
                           >
-                            {option}
-                          </option>
-                        ))}
-                      </select>
+                            <option value="" className="bg-neutral-900">
+                              {config.placeholder}
+                            </option>
+                            {config.options.map((option) => (
+                              <option
+                                key={option}
+                                value={option}
+                                className="bg-neutral-900"
+                              >
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        );
+                      })()
                     ) : field.type === "TEXTAREA" ? (
                       <textarea
                         rows={5}

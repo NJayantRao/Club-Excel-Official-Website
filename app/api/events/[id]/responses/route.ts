@@ -2,6 +2,13 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/authorize-admin";
 import { revalidateTag } from "next/cache";
+import {
+  findRollNumberField,
+  getAcademicYear,
+  isGroupAllowed,
+  isGroupField,
+  isGroupRuleEnabled,
+} from "@/lib/group-eligibility";
 
 export async function GET(
   request: NextRequest,
@@ -154,6 +161,11 @@ export async function POST(
       }
     }
 
+    // Group rule (only for events listed in lib/group-eligibility.ts)
+    const rollField = isGroupRuleEnabled(id)
+      ? findRollNumberField(event.formFields)
+      : undefined;
+
     for (const field of event.formFields) {
       if (field.type !== "SELECT") continue;
 
@@ -168,6 +180,30 @@ export async function POST(
           },
           { status: 400 }
         );
+      }
+
+      if (rollField && isGroupField(field.name)) {
+        const year = getAcademicYear(String(answers?.[rollField.name] ?? ""));
+
+        if (year === null) {
+          return Response.json(
+            {
+              success: false,
+              message: "Enter a valid roll number to choose a group.",
+            },
+            { status: 400 }
+          );
+        }
+
+        if (!isGroupAllowed(value, year)) {
+          return Response.json(
+            {
+              success: false,
+              message: `${value} is not open to your year.`,
+            },
+            { status: 400 }
+          );
+        }
       }
     }
 
