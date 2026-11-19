@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/authorize-admin";
 import { revalidateTag } from "next/cache";
+import { isInstituteEmail, isInstituteEmailField } from "@/lib/institute-email";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const URL_RE = /^https?:\/\/\S+/;
@@ -136,6 +137,19 @@ export async function PATCH(
         }
 
         if (!normalized) continue;
+
+        if (
+          isInstituteEmailField(field) &&
+          !isInstituteEmail(String(normalized))
+        ) {
+          return Response.json(
+            {
+              success: false,
+              message: `${field.label} must be a valid @nist.edu email.`,
+            },
+            { status: 400 }
+          );
+        }
 
         switch (field.type) {
           case "EMAIL":

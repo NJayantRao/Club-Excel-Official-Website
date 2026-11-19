@@ -4,6 +4,7 @@ import { EventFormField } from "@prisma/client";
 import LinkifiedText from "@/components/ui/LinkifiedText";
 import { EVENT_TIME_ZONE } from "@/lib/datetime";
 import axios from "axios";
+import { isInstituteEmail, isInstituteEmailField } from "@/lib/institute-email";
 import {
   filterGroupOptions,
   findRollNumberField,
@@ -71,6 +72,7 @@ export default function RegisterEventPage() {
     ? findRollNumberField(event?.formFields ?? [])
     : undefined;
   const ruleApplies = !!rollField;
+
   const academicYear = getAcademicYear(
     rollField ? answers[rollField.name] : ""
   );
@@ -183,6 +185,12 @@ export default function RegisterEventPage() {
 
       if (field.required && !answers[field.name]?.trim()) {
         nextErrors[field.name] = `${field.label} is required`;
+      } else if (
+        isInstituteEmailField(field) &&
+        answers[field.name]?.trim() &&
+        !isInstituteEmail(answers[field.name])
+      ) {
+        nextErrors[field.name] = "Must be a valid @nist.edu email";
       }
     }
 

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/authorize-admin";
 import { revalidateTag } from "next/cache";
+import { getInstituteEmailError } from "@/lib/institute-email";
 import {
   findRollNumberField,
   getAcademicYear,
@@ -205,6 +206,19 @@ export async function POST(
           );
         }
       }
+    }
+
+    // Any "institute email" field must be an @nist.edu address
+    const instituteEmailError = getInstituteEmailError(
+      event.formFields,
+      answers
+    );
+
+    if (instituteEmailError) {
+      return Response.json(
+        { success: false, message: instituteEmailError },
+        { status: 400 }
+      );
     }
 
     const response = await prisma.eventResponse.create({

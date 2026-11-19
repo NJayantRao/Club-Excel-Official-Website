@@ -1,6 +1,7 @@
 "use client";
 
 import { ReadOnlyField, TextField } from "./FormField";
+import { isInstituteEmail, isInstituteEmailField } from "@/lib/institute-email";
 
 export interface DynamicFormFieldLite {
   name: string;
@@ -39,6 +40,11 @@ export const validateDynamicAnswers = (
     }
 
     if (!value) continue;
+
+    if (isInstituteEmailField(field) && !isInstituteEmail(value)) {
+      errors[field.name] = "Must be a @nist.edu email";
+      continue;
+    }
 
     switch (field.type) {
       case "EMAIL":
